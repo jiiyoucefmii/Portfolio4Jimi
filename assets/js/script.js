@@ -63,7 +63,13 @@ const selectItems = document.querySelectorAll("[data-select-item]");
 const selectValue = document.querySelector("[data-selecct-value]");
 const filterBtn = document.querySelectorAll("[data-filter-btn]");
 
-select.addEventListener("click", function () { elementToggleFunc(this); });
+select.addEventListener("click", function () {
+  elementToggleFunc(this);
+
+  if (this.classList.contains("active")) {
+    wiggleDesignSystemsTab(mobileBeamTabs);
+  }
+});
 
 // add event in all select items
 for (let i = 0; i < selectItems.length; i++) {
@@ -141,13 +147,14 @@ for (let i = 0; i < formInputs.length; i++) {
 // page navigation variables
 const navigationLinks = document.querySelectorAll("[data-nav-link]");
 const pages = document.querySelectorAll("[data-page]");
-const beamTabs = document.querySelectorAll(".beam-tab");
+const desktopBeamTabs = document.querySelectorAll(".filter-list .beam-tab");
+const mobileBeamTabs = document.querySelectorAll(".select-list .beam-tab");
 
-const wiggleDesignSystemsTab = function () {
-  for (let i = 0; i < beamTabs.length; i++) {
-    beamTabs[i].classList.remove("is-wiggling");
-    void beamTabs[i].offsetWidth;
-    beamTabs[i].classList.add("is-wiggling");
+const wiggleDesignSystemsTab = function (tabs) {
+  for (let i = 0; i < tabs.length; i++) {
+    tabs[i].classList.remove("is-wiggling");
+    void tabs[i].offsetWidth;
+    tabs[i].classList.add("is-wiggling");
   }
 };
 
@@ -162,7 +169,7 @@ for (let i = 0; i < navigationLinks.length; i++) {
         window.scrollTo(0, 0);
 
         if (pages[i].dataset.page === "portfolio") {
-          wiggleDesignSystemsTab();
+          wiggleDesignSystemsTab(desktopBeamTabs);
         }
       } else {
         pages[i].classList.remove("active");
