@@ -141,6 +141,15 @@ for (let i = 0; i < formInputs.length; i++) {
 // page navigation variables
 const navigationLinks = document.querySelectorAll("[data-nav-link]");
 const pages = document.querySelectorAll("[data-page]");
+const beamTabs = document.querySelectorAll(".beam-tab");
+
+const wiggleDesignSystemsTab = function () {
+  for (let i = 0; i < beamTabs.length; i++) {
+    beamTabs[i].classList.remove("is-wiggling");
+    void beamTabs[i].offsetWidth;
+    beamTabs[i].classList.add("is-wiggling");
+  }
+};
 
 // add event to all nav link
 for (let i = 0; i < navigationLinks.length; i++) {
@@ -151,6 +160,10 @@ for (let i = 0; i < navigationLinks.length; i++) {
         pages[i].classList.add("active");
         navigationLinks[i].classList.add("active");
         window.scrollTo(0, 0);
+
+        if (pages[i].dataset.page === "portfolio") {
+          wiggleDesignSystemsTab();
+        }
       } else {
         pages[i].classList.remove("active");
         navigationLinks[i].classList.remove("active");
