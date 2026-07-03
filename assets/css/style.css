@@ -2136,3 +2136,41 @@ textarea.form-input::-webkit-resizer { display: none; }
   .timeline-text { max-width: 700px; }
 
 }
+
+/*-----------------------------------*\
+  # SCROLLYTELLING & KINETIC MOTION STYLES
+\*-----------------------------------*/
+
+html, body {
+  scroll-behavior: auto !important;
+}
+
+.hero-container {
+  min-height: 45vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  margin-bottom: 25px;
+}
+
+.horizontal-scroll-wrapper {
+  overflow: hidden;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .portfolio.active .project-list {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    width: max-content;
+    gap: 30px;
+    padding: 20px 0;
+  }
+
+  .portfolio.active .project-item {
+    width: 350px;
+    flex-shrink: 0;
+    margin-bottom: 0 !important;
+  }
+}

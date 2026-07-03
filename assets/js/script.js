@@ -1,6 +1,32 @@
 'use strict';
 
+// Register GSAP ScrollTrigger
+gsap.registerPlugin(ScrollTrigger);
 
+// Initialize Lenis
+const lenis = new Lenis({
+  lerp: 0.1,
+  duration: 1.2,
+  smoothWheel: true
+});
+
+function raf(time) {
+  lenis.raf(time);
+  requestAnimationFrame(raf);
+}
+requestAnimationFrame(raf);
+
+// Sync ScrollTrigger with Lenis
+lenis.on('scroll', ScrollTrigger.update);
+gsap.ticker.lagSmoothing(0);
+
+// Global Scroll State Refresher
+function refreshScrollState() {
+  lenis.resize();
+  ScrollTrigger.refresh();
+}
+
+window.addEventListener('load', refreshScrollState);
 
 // element toggle function
 const elementToggleFunc = function (elem) { elem.classList.toggle("active"); }
@@ -158,24 +184,224 @@ const wiggleDesignSystemsTab = function (tabs) {
   }
 };
 
-// add event to all nav link
-for (let i = 0; i < navigationLinks.length; i++) {
-  navigationLinks[i].addEventListener("click", function () {
+// Page lifecycle animation contexts
+let aboutCtx, resumeCtx, portfolioMM, contactCtx;
 
-    for (let i = 0; i < pages.length; i++) {
-      if (this.innerHTML.toLowerCase() === pages[i].dataset.page) {
-        pages[i].classList.add("active");
-        navigationLinks[i].classList.add("active");
-        window.scrollTo(0, 0);
-
-        if (pages[i].dataset.page === "portfolio") {
-          wiggleDesignSystemsTab(desktopBeamTabs);
-        }
-      } else {
-        pages[i].classList.remove("active");
-        navigationLinks[i].classList.remove("active");
+function initAboutPage() {
+  aboutCtx = gsap.context(() => {
+    // Pin and scale-down hero text
+    gsap.timeline({
+      scrollTrigger: {
+        trigger: ".hero-container",
+        start: "top 15%",
+        end: "+=60%",
+        pin: true,
+        anticipatePin: 1,
+        scrub: 1,
+        invalidateOnRefresh: true,
       }
-    }
+    }).to(".about-text", {
+      scale: 0.9,
+      opacity: 0.7,
+      ease: "power1.inOut"
+    });
 
+    // Stagger reveal service items
+    gsap.from(".service-item", {
+      opacity: 0,
+      y: 40,
+      stagger: 0.15,
+      duration: 0.8,
+      ease: "power2.out",
+      scrollTrigger: {
+        trigger: ".service-list",
+        start: "top 80%",
+        toggleActions: "play none none none"
+      }
+    });
+  }, document.querySelector('[data-page="about"]'));
+}
+
+function teardownAboutPage() {
+  aboutCtx?.revert();
+}
+
+function initResumePage() {
+  resumeCtx = gsap.context(() => {
+    // Stagger reveal education and experience timeline items
+    gsap.from(".timeline-item", {
+      opacity: 0,
+      y: 30,
+      stagger: 0.1,
+      duration: 0.8,
+      ease: "power2.out",
+      scrollTrigger: {
+        trigger: ".timeline",
+        start: "top 85%",
+        toggleActions: "play none none none"
+      }
+    });
+
+    // Reveal progress bars
+    gsap.from(".skills-item", {
+      opacity: 0,
+      y: 20,
+      stagger: 0.08,
+      duration: 0.6,
+      ease: "power2.out",
+      scrollTrigger: {
+        trigger: ".skills-list",
+        start: "top 85%",
+        toggleActions: "play none none none"
+      }
+    });
+  }, document.querySelector('[data-page="resume"]'));
+}
+
+function teardownResumePage() {
+  resumeCtx?.revert();
+}
+
+function initPortfolioPage() {
+  portfolioMM = gsap.matchMedia();
+
+  // Desktop horizontal scroll showcase
+  portfolioMM.add("(min-width: 768px)", () => {
+    const wrapper = document.querySelector(".horizontal-scroll-wrapper");
+    const list = document.querySelector(".project-list");
+    if (!wrapper || !list) return;
+
+    const ctx = gsap.context(() => {
+      gsap.to(list, {
+        x: () => -(list.scrollWidth - wrapper.clientWidth),
+        ease: "none",
+        scrollTrigger: {
+          trigger: wrapper,
+          pin: true,
+          anticipatePin: 1,
+          scrub: 1,
+          start: "top 12%",
+          end: () => "+=" + (list.scrollWidth - wrapper.clientWidth),
+          invalidateOnRefresh: true,
+        }
+      });
+    });
+
+    return () => ctx.revert();
+  });
+
+  // Mobile sequential reveal (no horizontal scroll-jacking)
+  portfolioMM.add("(max-width: 767px)", () => {
+    const ctx = gsap.context(() => {
+      gsap.from(".project-item", {
+        opacity: 0,
+        y: 30,
+        stagger: 0.1,
+        duration: 0.6,
+        ease: "power2.out",
+        scrollTrigger: {
+          trigger: ".project-list",
+          start: "top 85%",
+          toggleActions: "play none none none"
+        }
+      });
+    });
+
+    return () => ctx.revert();
   });
 }
+
+function teardownPortfolioPage() {
+  portfolioMM?.revert();
+}
+
+function initContactPage() {
+  contactCtx = gsap.context(() => {
+    gsap.from(".mapbox", {
+      opacity: 0,
+      y: 40,
+      duration: 0.8,
+      ease: "power2.out",
+      scrollTrigger: {
+        trigger: ".mapbox",
+        start: "top 85%",
+        toggleActions: "play none none none"
+      }
+    });
+
+    gsap.from(".contact-form", {
+      opacity: 0,
+      y: 40,
+      duration: 0.8,
+      ease: "power2.out",
+      scrollTrigger: {
+        trigger: ".contact-form",
+        start: "top 85%",
+        toggleActions: "play none none none"
+      }
+    });
+  }, document.querySelector('[data-page="contact"]'));
+}
+
+function teardownContactPage() {
+  contactCtx?.revert();
+}
+
+function initPage(pageId) {
+  if (pageId === "about") initAboutPage();
+  else if (pageId === "resume") initResumePage();
+  else if (pageId === "portfolio") initPortfolioPage();
+  else if (pageId === "contact") initContactPage();
+}
+
+function teardownPage(pageId) {
+  if (pageId === "about") teardownAboutPage();
+  else if (pageId === "resume") teardownResumePage();
+  else if (pageId === "portfolio") teardownPortfolioPage();
+  else if (pageId === "contact") teardownContactPage();
+}
+
+// Track current active page (matches HTML state where "about" is active)
+let activePageId = "about";
+
+// Add navigation click listener
+for (let i = 0; i < navigationLinks.length; i++) {
+  navigationLinks[i].addEventListener("click", function () {
+    const targetPageId = this.innerHTML.toLowerCase().trim();
+
+    if (targetPageId !== activePageId) {
+      // 1. Tear down animations of the previous active page
+      teardownPage(activePageId);
+
+      // 2. Set the new active page ID
+      activePageId = targetPageId;
+
+      // 3. Toggle visibility classes
+      for (let j = 0; j < pages.length; j++) {
+        if (activePageId === pages[j].dataset.page) {
+          pages[j].classList.add("active");
+          navigationLinks[j].classList.add("active");
+          window.scrollTo(0, 0);
+
+          if (activePageId === "portfolio") {
+            wiggleDesignSystemsTab(desktopBeamTabs);
+          }
+        } else {
+          pages[j].classList.remove("active");
+          navigationLinks[j].classList.remove("active");
+        }
+      }
+
+      // 4. Initialize animations for the new active page
+      initPage(activePageId);
+
+      // 5. Refresh scroll and trigger positioning
+      refreshScrollState();
+    }
+  });
+}
+
+// Initialize default active page on startup
+window.addEventListener("DOMContentLoaded", () => {
+  initPage(activePageId);
+});
